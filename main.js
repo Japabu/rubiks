@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import { Face, Rubiks } from './rubiks';
 
-const rubiks = new Rubiks(10, 100);
+const rubiks = new Rubiks(3, 500);
 
 addControls();
 
@@ -58,4 +58,19 @@ function addControls() {
             await rubiks.rot(Object.values(Face)[Math.floor(Math.random() * 6)], Math.floor(Math.random() * rubiks.size));
         }
     });
+
+
+
+    const size = document.createElement("input");
+    size.type = "number";
+    size.value = rubiks.size;
+    container.append(size);
+
+    const animationTime = document.createElement("input");
+    animationTime.type = "number";
+    animationTime.value = rubiks.animationTime;
+    container.append(animationTime);
+
+    size.addEventListener("input", () => rubiks.setSize(size.value));
+    animationTime.addEventListener("input", () => rubiks.animationTime = animationTime.value);
 }

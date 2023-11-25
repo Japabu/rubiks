@@ -37,7 +37,13 @@ export class Rubiks extends Group {
         this.size = size;
         this.anims = [];
         this.animationTime = animationTime;
+        this.setSize(size);
+    }
 
+    setSize(size) {
+        this.size = size;
+        this.clear();
+        this.animations = [];
         for (let y = 0; y < size; y++) {
             for (let z = 0; z < size; z++) {
                 for (let x = 0; x < size; x++) {
