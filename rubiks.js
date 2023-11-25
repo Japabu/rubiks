@@ -32,10 +32,11 @@ function faceNormal(face) {
 }
 
 export class Rubiks extends Group {
-    constructor(size) {
+    constructor(size, animationTime) {
         super();
         this.size = size;
         this.anims = [];
+        this.animationTime = animationTime;
 
         for (let y = 0; y < size; y++) {
             for (let z = 0; z < size; z++) {
@@ -77,14 +78,14 @@ export class Rubiks extends Group {
         const axis = n.x ? "x" : n.y ? "y" : n.z ? "z" : null;
         if (!axis) throw new Error("Unable to determine axis");
 
-        let pos = index * 1 / this.size + 0.5 / this.size;
+        let pos = index * 1 / this.size + 0.5 / this.size - 0.5;
         if (n[axis] > 0) pos = -pos;
 
-        const delta = 1 / this.size * 0.1;
+        const epsilon = 1 / this.size * 0.1;
         const ring = [];
 
         for (const part of this.children) {
-            if (Math.abs(part.position[axis] - pos) <= delta) ring.push(part);
+            if (Math.abs(part.position[axis] - pos) <= epsilon) ring.push(part);
         }
 
         return ring;
@@ -99,8 +100,9 @@ export class Rubiks extends Group {
         let theta = Math.PI / 2;
         if (n[axis] > 0) theta = -theta;
 
-        const parts = this.ring(face, index, axis);
-        this.anims.push(new RotationAnim(theta, axis, 1000, parts));
+        return new Promise(resolve => {
+            this.anims.push(new RotationAnim(theta, axis, this.animationTime, () => this.ring(face, index, axis), resolve));
+        });
     }
 }
 
@@ -130,25 +132,42 @@ export class RubiksPart extends Mesh {
 }
 
 class RotationAnim {
-    constructor(totalTheta, axis, totalTime, parts) {
+    constructor(totalTheta, axis, totalTime, partsFn, doneCallback) {
         this.totalTheta = totalTheta;
         this.rotFn = "makeRotation" + axis.toUpperCase();
         this.totalTime = totalTime;
-        this.parts = parts;
+        this.partsFn = partsFn;
+        this.parts = null;
         this.theta = 0;
         this.time = 0;
+        this.doneCallback = doneCallback;
+        this.done = false;
     }
 
-    update(delta) {
-        delta = Math.min(this.totalTime - this.time, delta);
-        this.time += delta;
-        const deltaTheta = this.totalTheta / this.totalTime * delta;
+    update(deltaTime) {
+        if (this.done) throw new Error("Animation is already done");
+
+        if (!this.parts) {
+            this.parts = this.partsFn();
+        }
+
+        if (deltaTime > this.totalTime - this.time) {
+            deltaTime = this.totalTime - this.time;
+            this.done = true;
+        }
+
+        this.time += deltaTime;
+        const deltaTheta = this.totalTheta / this.totalTime * deltaTime;
         const m = new Matrix4();
         m[this.rotFn](deltaTheta);
         for (const part of this.parts) {
             part.applyMatrix4(m);
         }
 
-        return delta;
+        if (this.done) {
+            this.doneCallback();
+        }
+
+        return deltaTime;
     }
 }
