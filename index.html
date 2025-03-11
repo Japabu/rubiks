@@ -5,6 +5,7 @@
 	<meta charset="utf-8">
 	<title>My first three.js app</title>
 	<style>
+		/* Basic styling to make the app fill the entire window */
 		html,
 		body {
 			margin: 0;
@@ -13,6 +14,7 @@
 			flex-direction: column;
 		}
 
+		/* Canvas container takes up all available space */
 		#canvasContainer {
 			flex: 1;
 		}
@@ -20,9 +22,14 @@
 </head>
 
 <body>
+	<!-- Container for UI controls (buttons, inputs) -->
 	<div id="controlsContainer">
 	</div>
+	
+	<!-- Container for the 3D Rubik's Cube canvas -->
 	<div id="canvasContainer"></div>
+	
+	<!-- Main application script (entry point) -->
 	<script type="module" src="./main.js"></script>
 </body>
 
