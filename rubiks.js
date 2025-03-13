@@ -60,6 +60,7 @@ export class Rubiks extends Group {
         this.size = size;
         this.anims = [];
         this.animationTime = animationTime;
+        this.moveHistory = []; // Track moves for potential solving
         this.setSize(size);
     }
 
@@ -71,6 +72,7 @@ export class Rubiks extends Group {
         this.size = size;
         this.clear(); // Remove all existing cube parts
         this.animations = [];
+        this.moveHistory = []; // Reset move history when size changes
         
         // Create each cubie at the correct position
         for (let y = 0; y < size; y++) {
@@ -146,21 +148,74 @@ export class Rubiks extends Group {
      * Rotates a ring of the cube
      * @param {string} face - The face to rotate
      * @param {number} index - The index of the ring to rotate
+     * @param {boolean} [forceClockwise] - Optional parameter to force a specific rotation direction
      * @returns {Promise} A promise that resolves when the rotation is complete
      */
-    rot(face, index) {
+    rot(face, index, forceClockwise) {
         const n = faceNormal(face);
         const axis = n.x ? "x" : n.y ? "y" : n.z ? "z" : null;
         if (!axis) throw new Error("Unable to determine axis");
 
         // Determine the rotation direction based on the face normal
         let theta = Math.PI / 2; // 90 degrees in radians
+        
+        // Default direction based on face normal
         if (n[axis] > 0) theta = -theta;
+        
+        // If forceClockwise is specified, override the default direction
+        if (forceClockwise !== undefined) {
+            // If we want to force clockwise, theta should be positive
+            // If we want to force counterclockwise, theta should be negative
+            theta = forceClockwise ? Math.abs(theta) : -Math.abs(theta);
+        }
+
+        // Record this move in history (for solving)
+        this.moveHistory.push({
+            face,
+            index,
+            isClockwise: theta > 0
+        });
 
         // Create and return a promise that resolves when the animation is complete
         return new Promise(resolve => {
             this.anims.push(new RotationAnim(theta, axis, this.animationTime, () => this.ring(face, index, axis), resolve));
         });
+    }
+
+    /**
+     * Generates a solution based on recorded move history
+     * @returns {Array} An array of moves that would solve the cube
+     */
+    generateSolution() {
+        // The simplest approach is to reverse the move history
+        return [...this.moveHistory].reverse();
+    }
+
+    /**
+     * Resets the cube to a solved state without animation
+     */
+    resetToSolved() {
+        // Store current animation time
+        const currentAnimTime = this.animationTime;
+        
+        // Set animation time to 0 for instant changes
+        this.animationTime = 0;
+        
+        // Apply solution moves
+        const solution = this.generateSolution();
+        const applyMoves = async () => {
+            for (const move of solution) {
+                await this.rot(move.face, move.index, !move.isClockwise);
+            }
+            
+            // Reset move history
+            this.moveHistory = [];
+            
+            // Restore original animation time
+            this.animationTime = currentAnimTime;
+        };
+        
+        return applyMoves();
     }
 }
 

@@ -12,22 +12,285 @@
 			height: 100%;
 			display: flex;
 			flex-direction: column;
+			font-family: Arial, sans-serif;
+			overflow: hidden;
 		}
 
 		/* Canvas container takes up all available space */
 		#canvasContainer {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			z-index: 1;
+		}
+
+		/* Control container styling - floating panel */
+		#controlsContainer {
+			position: absolute;
+			top: 20px;
+			right: 20px;
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			gap: 12px;
+			z-index: 10;
+			max-width: calc(100% - 40px);
+			justify-content: flex-end;
+		}
+		
+		/* Control section layout */
+		.rotation-buttons,
+		.automated-buttons,
+		.settings-container {
+			display: flex;
+			flex-direction: column;
+			padding: 12px;
+			background-color: rgba(255, 255, 255, 0.85);
+			backdrop-filter: blur(4px);
+			border-radius: 8px;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+			transition: background-color 0.3s;
+			flex: 0 1 auto;
+			min-width: 180px;
+			max-width: 300px;
+			height: fit-content;
+		}
+		
+		.rotation-buttons:hover,
+		.automated-buttons:hover,
+		.settings-container:hover {
+			background-color: rgba(255, 255, 255, 0.95);
+		}
+		
+		/* Control section header */
+		.control-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			cursor: pointer;
+			padding: 4px 0;
+			border-radius: 4px;
+			transition: background-color 0.2s;
+		}
+		
+		.control-header:hover {
+			background-color: rgba(245, 245, 245, 0.5);
+		}
+		
+		/* Toggle button */
+		.toggle-button {
+			background: none;
+			border: none;
+			padding: 2px 8px;
+			font-size: 12px;
+			color: #666;
+			cursor: pointer;
+			transition: transform 0.2s;
+		}
+		
+		.toggle-button:hover {
+			color: #333;
+		}
+		
+		/* Collapsible drawer */
+		.buttons-drawer {
+			display: flex;
+			flex-direction: column;
+			max-height: 0;
+			overflow: hidden;
+			transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+			opacity: 0;
+		}
+		
+		.buttons-drawer.expanded {
+			max-height: 300px; /* large enough to fit all buttons */
+			opacity: 1;
+			margin-top: 8px;
+		}
+		
+		/* Control section labels */
+		.control-label {
+			font-weight: bold;
+			margin-bottom: 4px;
+			color: #333;
+			font-size: 14px;
+		}
+		
+		/* Automated controls - keep buttons in a row on wider screens */
+		.automated-buttons {
+			padding: 12px;
+		}
+		
+		.automated-buttons-container {
+			display: flex;
+			flex-direction: row;
+			gap: 8px;
+			margin-top: 8px;
+		}
+		
+		/* Make button labels more concise for horizontal layout */
+		#controlsContainer button.shuffle-button,
+		#controlsContainer button.solve-button {
 			flex: 1;
+		}
+		
+		/* Settings layout */
+		.settings-container {
+			display: flex;
+			flex-direction: column;
+			min-width: 220px;
+		}
+		
+		.settings-container .control-label {
+			margin-bottom: 8px;
+		}
+		
+		.settings-row {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 8px;
+		}
+		
+		.settings-row:last-child {
+			margin-bottom: 0;
+		}
+		
+		.settings-row span {
+			margin-right: 8px;
+		}
+
+		/* Basic button styling */
+		#controlsContainer button {
+			padding: 8px 12px;
+			border-radius: 4px;
+			border: 1px solid rgba(204, 204, 204, 0.7);
+			cursor: pointer;
+			margin: 4px 0;
+			font-size: 14px;
+			transition: background-color 0.2s, transform 0.1s;
+		}
+		
+		#controlsContainer button:active {
+			transform: scale(0.98);
+		}
+		
+		/* Rotation button styling */
+		.rotation-button {
+			background-color: rgba(248, 248, 248, 0.7);
+			color: #333;
+		}
+		
+		.rotation-button:hover {
+			background-color: rgba(232, 232, 232, 0.9);
+		}
+
+		/* Special styling for solve button */
+		#controlsContainer button.solve-button {
+			background-color: rgba(76, 175, 80, 0.9);
+			color: white;
+			font-weight: bold;
+			padding: 10px 16px;
+			border: none;
+			margin-top: 8px;
+			transition: background-color 0.3s, opacity 0.3s;
+		}
+
+		#controlsContainer button.solve-button:hover {
+			background-color: rgba(69, 160, 73, 1);
+		}
+		
+		/* Special styling for shuffle button */
+		#controlsContainer button.shuffle-button {
+			background-color: rgba(33, 150, 243, 0.9);
+			color: white;
+			font-weight: bold;
+			padding: 10px 16px;
+			border: none;
+			margin-top: 8px;
+			transition: background-color 0.3s, opacity 0.3s;
+		}
+		
+		#controlsContainer button.shuffle-button:hover {
+			background-color: rgba(11, 125, 218, 1);
+		}
+		
+		/* Styling for active shuffle (stop state) */
+		#controlsContainer button.shuffle-button.active-shuffle {
+			background-color: rgba(244, 67, 54, 0.9);
+		}
+		
+		/* Disabled state for shuffle button */
+		#controlsContainer button.shuffle-button:disabled {
+			background-color: rgba(204, 204, 204, 0.7);
+			color: #888888;
+			cursor: not-allowed;
+			opacity: 0.7;
+		}
+		
+		/* Disabled state for solve button */
+		#controlsContainer button.solve-button:disabled {
+			background-color: rgba(204, 204, 204, 0.7);
+			color: #888888;
+			cursor: not-allowed;
+			opacity: 0.7;
+		}
+
+		/* Disabled state for regular buttons */
+		#controlsContainer button:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+
+		/* Input field styling */
+		#controlsContainer input {
+			padding: 6px;
+			width: 80px;
+			border: 1px solid rgba(221, 221, 221, 0.7);
+			border-radius: 4px;
+			background-color: rgba(255, 255, 255, 0.7);
+		}
+
+		/* Responsive behavior for smaller screens */
+		@media (max-width: 768px) {
+			#controlsContainer {
+				flex-direction: column;
+				top: 10px;
+				right: 10px;
+				max-width: calc(100% - 20px);
+			}
+			
+			.rotation-buttons,
+			.automated-buttons,
+			.settings-container {
+				max-width: none;
+			}
+			
+			.automated-buttons-container {
+				flex-direction: column;
+			}
+		}
+		
+		/* Adaptive positioning - move to bottom on extra small screens */
+		@media (max-height: 500px) {
+			#controlsContainer {
+				top: auto;
+				bottom: 10px;
+				flex-direction: row;
+			}
 		}
 	</style>
 </head>
 
 <body>
-	<!-- Container for UI controls (buttons, inputs) -->
-	<div id="controlsContainer">
-	</div>
-	
 	<!-- Container for the 3D Rubik's Cube canvas -->
 	<div id="canvasContainer"></div>
+	
+	<!-- Container for UI controls (buttons, inputs) - now overlaid on the canvas -->
+	<div id="controlsContainer">
+	</div>
 	
 	<!-- Main application script (entry point) -->
 	<script type="module" src="./main.js"></script>
